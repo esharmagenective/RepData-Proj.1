@@ -13,5 +13,6 @@ a<-ggplot(stepssum,aes(x= Steps))
 a+
     geom_histogram(color="blue", fill="lightblue")+
     labs(y="Number of Days", title = "Total Number of Steps")+
+    geom_vline(aes(xintercept=mean(stepssum$Steps)), size=1, linetype=3, color="#878787")
     theme_bw()
     
