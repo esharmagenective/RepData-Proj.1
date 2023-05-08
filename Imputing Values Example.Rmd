@@ -1,0 +1,155 @@
+# Different ways to Impute Missing Values
+
+[Original Article](https://appsilon.com/imputation-in-r/#:~:text=Summary-,Introduction%20to%20Imputation%20in%20R,into%20a%20machine%20learning%20model)
+
+
+Required packages:
+```{r}
+library(ggplot2)
+library(dplyr)
+library(cowplot)
+library(titanic)
+```
+
+Looking at the age data overall first to get a sense of what it already is
+```{r}
+head(titanic_train$Age)
+
+ggplot(titanic_train, aes(Age))+
+    geom_histogram(color="black",fill="skyblue")+
+    ggtitle("Variable distribution")+
+    theme_classic()+
+    theme(plot.title = element_text(size = 18))
+
+```
+
+
+### Simple Value Imputation using built in functions
+
+- Zero: a constant put in for all NAs
+- Mean (average): average value for age replacing all NAs
+- Median: median value for age replacing all NAs
+
+```{r}
+value_imputed<- data.frame(
+    original=titanic_train$Age,
+    imputed_zero=replace(titanic_train$Age, is.na(titanic_train$Age),0),
+    imputed_mean=replace(titanic_train$Age, is.na(titanic_train$Age),mean(titanic_train$Age, na.rm = TRUE)),
+    imputed_median=replace(titanic_train$Age, is.na(titanic_train$Age),median(titanic_train$Age, na.rm = TRUE))
+)
+head(value_imputed, n=15)
+```
+
+Look at how each type of imputed data changed the distribution:
+```{r}
+h1 <- ggplot(value_imputed, aes(x = original)) +
+  geom_histogram(fill = "#ad1538", color = "#000000", position = "identity") +
+  ggtitle("Original distribution") +
+  theme_classic()
+h2 <- ggplot(value_imputed, aes(x = imputed_zero)) +
+  geom_histogram(fill = "#15ad4f", color = "#000000", position = "identity") +
+  ggtitle("Zero-imputed distribution") +
+  theme_classic()
+h3 <- ggplot(value_imputed, aes(x = imputed_mean)) +
+  geom_histogram(fill = "#1543ad", color = "#000000", position = "identity") +
+  ggtitle("Mean-imputed distribution") +
+  theme_classic()
+h4 <- ggplot(value_imputed, aes(x = imputed_median)) +
+  geom_histogram(fill = "#ad8415", color = "#000000", position = "identity") +
+  ggtitle("Median-imputed distribution") +
+  theme_classic()
+
+plot_grid(h1, h2, h3, h4, nrow = 2, ncol = 2)
+```
+
+### Using MICE
+
+Load in MICE and look at the numeric columns
+```{r}
+library(mice)
+
+titanic_numeric<-titanic_train %>%
+    select(Survived, Pclass, SibSp, Parch, Age)
+
+md.pattern(titanic_numeric)
+```
+
+Use these three types of imputation methods from MICE:
+
+- pmm: predictive mean matching
+- cart: classification and regression trees
+- laso.norm: lasso linear regression
+
+```{r}
+
+mice_imputed <- data.frame(
+  original = titanic_train$Age,
+  imputed_pmm = complete(mice(titanic_numeric, method = "pmm"))$Age,
+  imputed_cart = complete(mice(titanic_numeric, method = "cart"))$Age,
+  imputed_lasso = complete(mice(titanic_numeric, method = "lasso.norm"))$Age
+)
+head(mice_imputed, n=15)
+```
+
+Look at different distributions again:
+
+```{r}
+s1 <- ggplot(mice_imputed, aes(x = original)) +
+  geom_histogram(fill = "#ad1538", color = "#000000", position = "identity") +
+  ggtitle("Original distribution") +
+  theme_classic()
+s2 <- ggplot(mice_imputed, aes(x = imputed_pmm)) +
+  geom_histogram(fill = "#15ad4f", color = "#000000", position = "identity") +
+  ggtitle("PMM-imputed distribution") +
+  theme_classic()
+s3 <- ggplot(mice_imputed, aes(x = imputed_cart)) +
+  geom_histogram(fill = "#1543ad", color = "#000000", position = "identity") +
+  ggtitle("Cart-imputed distribution") +
+  theme_classic()
+s4 <- ggplot(mice_imputed, aes(x = imputed_lasso)) +
+  geom_histogram(fill = "#ad8415", color = "#000000", position = "identity") +
+  ggtitle("Lasso-imputed distribution") +
+  theme_classic()
+
+plot_grid(s1, s2, s3, s4, nrow = 2, ncol = 2)
+```
+
+### Using the missForest package
+
+```{r}
+library(missForest)
+
+missForest_imputed <- data.frame(
+  original = titanic_numeric$Age,
+  imputed_missForest = missForest(titanic_numeric)$ximp$Age
+)
+head(missForest_imputed, n=15)
+
+```
+
+```{r}
+
+f1 <- ggplot(missForest_imputed, aes(x = original)) +
+  geom_histogram(fill = "#ad1538", color = "#000000", position = "identity") +
+  ggtitle("Original distribution") +
+  theme_classic()
+f2 <- ggplot(missForest_imputed, aes(x = imputed_missForest)) +
+  geom_histogram(fill = "#15ad4f", color = "#000000", position = "identity") +
+  ggtitle("missForest-imputed distribution") +
+  theme_classic()
+
+plot_grid(f1, f2, nrow = 1, ncol = 2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
