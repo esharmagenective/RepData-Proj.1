@@ -43,6 +43,51 @@ print(avg[which.max(avg$Steps) , ])
 #   Imputing NA's
 ##################
 
+# Finding number of rows with NAs
+
+sum(is.na(activity$steps)>0)
+
+
+x<-mean(stepssum$Steps)
+y<-median(stepssum$Steps)
+m<-mean(imstepssum$imputed.Steps)
+n<-median(imstepssum$imputed.Steps)
+
+z<-data.frame(Mean=c(x,m),Median=c(y,n))
+row.names(z)<-c("Original","Imputed")
+z
+
+######################
+#   Weekday vs Weekend
+######################
+
+
+mice_imputed$date<-as.Date(mice_imputed$date)
+str(mice_imputed)
+
+Day<-weekdays(mice_imputed$date)
+mice_imputed<-cbind(mice_imputed,Day)
+str(mice_imputed)
+
+mice_imputed<-mutate(mice_imputed, Weekday = ifelse(w=="Monday"|w=="Tuesday"|w=="Wednesday"|w=="Thursday"|w=="Friday","Y","N"))
+
+str(mice_imputed)
+unique(mice_imputed$Day)
+unique(mice_imputed$Weekday)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
